@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ROYAN PROJECT - Ular Tangga Zigzag</title>
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    body { margin: 0; font-family: sans-serif; background: #111; color: #eee; }
+    #guide { position: fixed; top: 10px; right: 10px; background: #333; padding: 10px 15px; border-radius: 10px; font-size: 0.9em; box-shadow: 0 0 5px #0ff; z-index: 1000; }
+    #board { display: grid; gap: 2px; margin: 60px auto 10px; width: 90vw; max-width: 500px; }
+    .cell { background: #222; color: #fff; text-align: center; padding-top: 100%; position: relative; }
+    .cell span { position: absolute; top: 5px; left: 5px; font-size: 0.7em; }
+    .player { position: absolute; font-size: 1.5em; animation: pop 0.3s ease; }
+    @keyframes pop { 0% { transform: scale(0.5); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+    #controls { text-align: center; margin-bottom: 20px; }
+    button { padding: 10px 20px; margin: 5px; font-size: 1em; border: none; background: #0f0; color: #000; border-radius: 5px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div id="guide">Petunjuk Petak: 13=RPG | 27=Flappy | 45=Quiz | 60=AI</div>
+  <div id="controls">
+    <button onclick="rollDice()">Lempar Dadu</button>
+    <p id="turnText">Giliran: Pemain 1</p>
+  </div>
+  <div id="board"></div>
+  <script>
+    const board = document.getElementById("board");
+    let position = [1, 1];
+    let giliran = 0;
+    const boardSize = 10;
+
+    function createBoard() {
+      board.innerHTML = "";
+      board.style.gridTemplateColumns = `repeat(${boardSize}, 1fr)`;
+      for (let row = boardSize - 1; row >= 0; row--) {
+        for (let col = 0; col < boardSize; col++) {
+          let n = row * boardSize + (row % 2 === 0 ? col + 1 : boardSize - col);
+          const cell = document.createElement("div");
+          cell.className = "cell";
+          cell.dataset.cell = n;
+          cell.innerHTML = `<span>${n}</span>`;
+          board.appendChild(cell);
+        }
+      }
+    }
+
+    function updatePlayers() {
+      document.querySelectorAll(".player").forEach(p => p.remove());
+      for (let i = 0; i < 2; i++) {
+        const cell = document.querySelector(`[data-cell="${position[i]}"]`);
+        if (cell) {
+          const token = document.createElement("div");
+          token.className = "player";
+          token.style.left = i === 0 ? "5px" : "auto";
+          token.style.right = i === 1 ? "5px" : "auto";
+          token.style.top = i === 0 ? "5px" : "auto";
+          token.style.bottom = i === 1 ? "5px" : "auto";
+          token.textContent = i === 0 ? "🐸" : "🐱";
+          cell.appendChild(token);
+        }
+      }
+    }
+
+    function rollDice() {
+      const roll = Math.floor(Math.random() * 6) + 1;
+      alert("Dadu: " + roll);
+      position[giliran] = Math.min(position[giliran] + roll, boardSize * boardSize);
+      checkSpecialTile(position[giliran]);
+      updatePlayers();
+      if (position[giliran] === 100) {
+        alert("Pemain " + (giliran + 1) + " menang!");
+        return;
+      }
+      giliran = 1 - giliran;
+      document.getElementById("turnText").textContent = "Giliran: Pemain " + (giliran + 1);
+    }
+
+    function checkSpecialTile(tile) {
+      if (tile === 13) {
+        const choice = confirm("Petak 13: Mini RPG!
+Ambil Pedang?");
+        alert(choice ? "Kamu siap bertempur!" : "Kamu bermain aman.");
+      }
+      if (tile === 27) {
+        alert("Petak 27: Flappy Mode (bonus langkah)!");
+        position[giliran] += 2;
+      }
+      if (tile === 45) {
+        const jawab = prompt("Petak 45: Quiz!
+Apa ibu kota Indonesia?");
+        if ((jawab || "").toLowerCase() === "jakarta") {
+          alert("Benar! Bonus XP!");
+        } else {
+          alert("Salah! Kena ular.");
+          position[giliran] = Math.max(1, position[giliran] - 5);
+        }
+      }
+      if (tile === 60) {
+        const tanya = prompt("Petak 60: NPC AI
+Tanyakan sesuatu:");
+        alert("NPC: Jawaban atas "" + tanya + ""... hanya ada di dalam hatimu.");
+      }
+    }
+
+    window.onload = () => {
+      createBoard();
+      updatePlayers();
+    };
+  </script>
+</body>
+</html>
